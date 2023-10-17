@@ -1,4 +1,30 @@
 #!/usr/bin/make -f
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
+
+# Override Makefile defaults
+export TLP_ZSHCPL=/usr/share/zsh/vendor-completions
+
+# Debian and Ubuntu provide x86_energy_perf_policy in different packages
+ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes),yes)
+	SUBSTVARS = -Vdist:Suggests="linux-tools-generic | linux-tools"
+else
+	SUBSTVARS = -Vdist:Suggests="linux-cpupower"
+endif
 
 %:
 	dh $@
+
+override_dh_installsystemd:
+	dh_installsystemd --package=tlp --no-start --no-restart-after-upgrade
+
+override_dh_installinit:
+	dh_installinit --package=tlp --no-start --no-restart-after-upgrade --only-scripts -- defaults 98 01
+
+override_dh_gencontrol:
+	dh_gencontrol --package=tlp -- $(SUBSTVARS)
+	dh_gencontrol --remaining-packages
+
+override_dh_installdocs:
+	dh_installdocs --link-doc tlp
