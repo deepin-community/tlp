@@ -1,0 +1,96 @@
+Index: TLP/deepin-system-power-control/00-deepin-system-power-control_balance.conf
+===================================================================
+--- TLP.orig/deepin-system-power-control/00-deepin-system-power-control_balance.conf	2024-01-10 16:02:00.700098758 +0800
++++ TLP/deepin-system-power-control/00-deepin-system-power-control_balance.conf	2024-01-10 16:05:34.737664816 +0800
+@@ -20,8 +20,8 @@
+ DISK_APM_LEVEL_ON_BAT="254 254"
+ DISK_APM_CLASS_DENYLIST="usb ieee1394"
+ DISK_IOSCHED="keep keep"
+-SATA_LINKPWR_ON_AC="med_power_with_dipm"
+-SATA_LINKPWR_ON_BAT="med_power_with_dipm"
++# SATA_LINKPWR_ON_AC="med_power_with_dipm"
++# SATA_LINKPWR_ON_BAT="med_power_with_dipm"
+ AHCI_RUNTIME_PM_ON_AC=on
+ AHCI_RUNTIME_PM_ON_BAT=on
+ AHCI_RUNTIME_PM_TIMEOUT=15
+@@ -49,7 +49,7 @@
+ RUNTIME_PM_ON_AC=on
+ RUNTIME_PM_ON_BAT=on
+ RUNTIME_PM_DRIVER_DENYLIST="mei_me nouveau radeon"
+-USB_AUTOSUSPEND=1
++USB_AUTOSUSPEND=0
+ USB_EXCLUDE_AUDIO=1
+ USB_EXCLUDE_BTUSB=0
+ USB_EXCLUDE_PHONE=0
+Index: TLP/deepin-system-power-control/00-deepin-system-power-control_lowbat.conf
+===================================================================
+--- TLP.orig/deepin-system-power-control/00-deepin-system-power-control_lowbat.conf	2024-01-10 16:02:00.700098758 +0800
++++ TLP/deepin-system-power-control/00-deepin-system-power-control_lowbat.conf	2024-01-10 16:06:21.079276743 +0800
+@@ -20,8 +20,8 @@
+ DISK_APM_LEVEL_ON_BAT="128 128"
+ DISK_APM_CLASS_DENYLIST="usb ieee1394"
+ DISK_IOSCHED="keep keep"
+-SATA_LINKPWR_ON_AC="min_power"
+-SATA_LINKPWR_ON_BAT="min_power"
++# SATA_LINKPWR_ON_AC="min_power"
++# SATA_LINKPWR_ON_BAT="min_power"
+ AHCI_RUNTIME_PM_ON_AC=on
+ AHCI_RUNTIME_PM_ON_BAT=on
+ AHCI_RUNTIME_PM_TIMEOUT=60
+@@ -51,7 +51,7 @@
+ RUNTIME_PM_ON_AC=auto
+ RUNTIME_PM_ON_BAT=auto
+ RUNTIME_PM_DRIVER_DENYLIST="mei_me nouveau radeon"
+-USB_AUTOSUSPEND=1
++USB_AUTOSUSPEND=0
+ USB_EXCLUDE_AUDIO=1
+ USB_EXCLUDE_BTUSB=0
+ USB_EXCLUDE_PHONE=0
+Index: TLP/deepin-system-power-control/00-deepin-system-power-control_performance.conf
+===================================================================
+--- TLP.orig/deepin-system-power-control/00-deepin-system-power-control_performance.conf	2024-01-10 16:02:00.700098758 +0800
++++ TLP/deepin-system-power-control/00-deepin-system-power-control_performance.conf	2024-01-10 16:10:00.457504909 +0800
+@@ -20,8 +20,8 @@
+ DISK_APM_LEVEL_ON_BAT="254 254"
+ DISK_APM_CLASS_DENYLIST="usb ieee1394"
+ DISK_IOSCHED="keep keep"
+-SATA_LINKPWR_ON_AC="med_power_with_dipm"
+-SATA_LINKPWR_ON_BAT="med_power_with_dipm"
++SATA_LINKPWR_ON_AC="max_performance"
++SATA_LINKPWR_ON_BAT="max_performance"
+ AHCI_RUNTIME_PM_ON_AC=on
+ AHCI_RUNTIME_PM_ON_BAT=on
+ AHCI_RUNTIME_PM_TIMEOUT=15
+@@ -49,7 +49,7 @@
+ RUNTIME_PM_ON_AC=on
+ RUNTIME_PM_ON_BAT=on
+ RUNTIME_PM_DRIVER_DENYLIST="mei_me nouveau radeon"
+-USB_AUTOSUSPEND=1
++USB_AUTOSUSPEND=0
+ USB_EXCLUDE_AUDIO=1
+ USB_EXCLUDE_BTUSB=0
+ USB_EXCLUDE_PHONE=0
+Index: TLP/deepin-system-power-control/00-deepin-system-power-control_saving.conf
+===================================================================
+--- TLP.orig/deepin-system-power-control/00-deepin-system-power-control_saving.conf	2024-01-10 16:02:00.700098758 +0800
++++ TLP/deepin-system-power-control/00-deepin-system-power-control_saving.conf	2024-01-10 16:10:44.179981477 +0800
+@@ -20,8 +20,8 @@
+ DISK_APM_LEVEL_ON_BAT="128 128"
+ DISK_APM_CLASS_DENYLIST="usb ieee1394"
+ DISK_IOSCHED="keep keep"
+-SATA_LINKPWR_ON_AC="med_power_with_dipm"
+-SATA_LINKPWR_ON_BAT="med_power_with_dipm"
++# SATA_LINKPWR_ON_AC="med_power_with_dipm"
++# SATA_LINKPWR_ON_BAT="med_power_with_dipm"
+ AHCI_RUNTIME_PM_ON_AC=on
+ AHCI_RUNTIME_PM_ON_BAT=on
+ AHCI_RUNTIME_PM_TIMEOUT=45
+@@ -49,7 +49,7 @@
+ RUNTIME_PM_ON_AC=auto
+ RUNTIME_PM_ON_BAT=auto
+ RUNTIME_PM_DRIVER_DENYLIST="mei_me nouveau radeon"
+-USB_AUTOSUSPEND=1
++USB_AUTOSUSPEND=0
+ USB_EXCLUDE_AUDIO=1
+ USB_EXCLUDE_BTUSB=0
+ USB_EXCLUDE_PHONE=0

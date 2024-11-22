@@ -1,3 +1,9 @@
+tlp (1.7.0.1-deepin1) stable; urgency=medium
+
+  * merge v20 patch.
+
+ -- xinpeng.wang <wangxinpeng@uniontech.com>  Fri, 22 Nov 2024 15:33:19 +0800
+
 tlp (1.7.0-1) unstable; urgency=medium
 
   * New upstream version 1.7.0
