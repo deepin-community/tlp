@@ -1,0 +1,60 @@
+Index: TLP/deepin-system-power-control/00-deepin-system-power-control_balance.conf
+===================================================================
+--- TLP.orig/deepin-system-power-control/00-deepin-system-power-control_balance.conf
++++ TLP/deepin-system-power-control/00-deepin-system-power-control_balance.conf
+@@ -27,8 +27,8 @@ DISK_IOSCHED="keep keep"
+ AHCI_RUNTIME_PM_ON_AC=on
+ AHCI_RUNTIME_PM_ON_BAT=on
+ AHCI_RUNTIME_PM_TIMEOUT=15
+-PCIE_ASPM_ON_AC=default
+-PCIE_ASPM_ON_BAT=default
++PCIE_ASPM_ON_AC=performance
++PCIE_ASPM_ON_BAT=performance
+ RADEON_DPM_PERF_LEVEL_ON_AC=auto
+ RADEON_DPM_PERF_LEVEL_ON_BAT=auto
+ RADEON_POWER_PROFILE_ON_AC=default
+Index: TLP/deepin-system-power-control/00-deepin-system-power-control_lowbat.conf
+===================================================================
+--- TLP.orig/deepin-system-power-control/00-deepin-system-power-control_lowbat.conf
++++ TLP/deepin-system-power-control/00-deepin-system-power-control_lowbat.conf
+@@ -27,8 +27,8 @@ DISK_IOSCHED="keep keep"
+ AHCI_RUNTIME_PM_ON_AC=on
+ AHCI_RUNTIME_PM_ON_BAT=on
+ AHCI_RUNTIME_PM_TIMEOUT=60
+-PCIE_ASPM_ON_AC=powersave
+-PCIE_ASPM_ON_BAT=powersave
++PCIE_ASPM_ON_AC=performance
++PCIE_ASPM_ON_BAT=performance
+ RADEON_DPM_PERF_LEVEL_ON_AC=low
+ RADEON_DPM_PERF_LEVEL_ON_BAT=low
+ RADEON_POWER_PROFILE_ON_AC=low
+Index: TLP/deepin-system-power-control/00-deepin-system-power-control_performance.conf
+===================================================================
+--- TLP.orig/deepin-system-power-control/00-deepin-system-power-control_performance.conf
++++ TLP/deepin-system-power-control/00-deepin-system-power-control_performance.conf
+@@ -27,8 +27,8 @@ SATA_LINKPWR_ON_BAT="max_performance"
+ AHCI_RUNTIME_PM_ON_AC=on
+ AHCI_RUNTIME_PM_ON_BAT=on
+ AHCI_RUNTIME_PM_TIMEOUT=15
+-PCIE_ASPM_ON_AC=default
+-PCIE_ASPM_ON_BAT=default
++PCIE_ASPM_ON_AC=performance
++PCIE_ASPM_ON_BAT=performance
+ RADEON_DPM_PERF_LEVEL_ON_AC=auto
+ RADEON_DPM_PERF_LEVEL_ON_BAT=auto
+ RADEON_POWER_PROFILE_ON_AC=default
+Index: TLP/deepin-system-power-control/00-deepin-system-power-control_saving.conf
+===================================================================
+--- TLP.orig/deepin-system-power-control/00-deepin-system-power-control_saving.conf
++++ TLP/deepin-system-power-control/00-deepin-system-power-control_saving.conf
+@@ -27,8 +27,8 @@ DISK_IOSCHED="keep keep"
+ AHCI_RUNTIME_PM_ON_AC=on
+ AHCI_RUNTIME_PM_ON_BAT=on
+ AHCI_RUNTIME_PM_TIMEOUT=45
+-PCIE_ASPM_ON_AC=default
+-PCIE_ASPM_ON_BAT=default
++PCIE_ASPM_ON_AC=performance
++PCIE_ASPM_ON_BAT=performance
+ RADEON_DPM_PERF_LEVEL_ON_AC=low
+ RADEON_DPM_PERF_LEVEL_ON_BAT=low
+ RADEON_POWER_PROFILE_ON_AC=low

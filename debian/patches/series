@@ -1,0 +1,12 @@
+uniontech-deepin-system-power-control.patch
+uniontech-deepin-system-power-optimization.patch
+uniontech-deepin-system-power-intel-gpu.patch
+uniontech-fix-SATA-and-USB-config.patch
+uniontech-deepin-system-add-new-filesystem.patch
+uniontech-fix-WOL-DISABLE-config.patch
+uniontech-deepin-system-balance-cpu-value.patch
+uniontech-fix-CPU_ENERGY_PERF_POLICY.patch
+uniontech-fix-the-issue-standby-failure.patch
+uniontech-deepin-system-cust-x1-Power-consumption-optimization.patch
+uniontech-enable-nmi-watchdog.patch
+uniontech-del-amdgpu-powersave.patch

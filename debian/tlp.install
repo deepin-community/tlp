@@ -14,6 +14,7 @@ usr/bin/tlp-stat
 usr/bin/wifi
 usr/bin/wwan
 usr/sbin/tlp
+usr/sbin/deepin-system-power-control
 usr/share/bash-completion/completions/bluetooth
 usr/share/bash-completion/completions/nfc
 usr/share/bash-completion/completions/run-on-ac
@@ -45,3 +46,7 @@ usr/share/tlp/tlp-readconfs
 usr/share/tlp/tlp-usblist
 usr/share/metainfo/de.linrunner.tlp.metainfo.xml
 var/lib/tlp
+usr/share/tlp/deepin-system-power-control/00-deepin-system-power-control_balance.conf
+usr/share/tlp/deepin-system-power-control/00-deepin-system-power-control_lowbat.conf
+usr/share/tlp/deepin-system-power-control/00-deepin-system-power-control_performance.conf
+usr/share/tlp/deepin-system-power-control/00-deepin-system-power-control_saving.conf
