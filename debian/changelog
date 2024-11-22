@@ -1,3 +1,28 @@
+tlp (1.7.0-1) unstable; urgency=medium
+
+  * New upstream version 1.7.0
+
+  [ Raphaël Halimi ]
+  * [4bcc180] debian/rules: remove DEP-17 settings (now upstream default)
+  * [9bdf1f4] Bump Standards-Version to 4.7.0
+
+  [ Thomas Koch ]
+  * [d19db43] Add Fish completion and bash completion for run-on-ac/bat
+  * [aeb03ee] Remove tpacpi-bat
+  * [f85d0e7] Remove Suggests providing x86_energy_perf_policy
+  * [fc1b72a] debian/copyright: remove tpacpi-bat, update to 2024
+  * [44653af] Add Conflicts: tuned
+  * [c44bc9e] Update lintian overrides
+  * [4eba6b9] Remove GPL-3+ (tpacpi-bat) from copyright
+
+ -- Raphaël Halimi <raphael.halimi@gmail.com>  Sun, 06 Oct 2024 11:50:56 +0200
+
+tlp (1.6.1-2) unstable; urgency=medium
+
+  * [7a69957] Move remaining files to /usr for DEP-17 (Closes: #1073658)
+
+ -- Raphaël Halimi <raphael.halimi@gmail.com>  Mon, 24 Jun 2024 13:32:22 +0200
+
 tlp (1.6.1-1) unstable; urgency=medium
 
   * [45c34ae] New upstream version 1.6.1

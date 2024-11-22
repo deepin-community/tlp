@@ -3,7 +3,7 @@ Maintainer: Raphaël Halimi <raphael.halimi@gmail.com>
 Section: utils
 Priority: optional
 Build-Depends: debhelper-compat (= 13)
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Browser: https://salsa.debian.org/moonsweep/tlp
 Vcs-Git: https://salsa.debian.org/moonsweep/tlp.git
 Homepage: https://linrunner.de/tlp
@@ -13,7 +13,7 @@ Architecture: all
 Depends: hdparm, iw, pciutils, rfkill, usbutils, ${misc:Depends}
 Recommends: tlp-rdw, ethtool
 Suggests: tp-smapi-dkms, smartmontools, ${dist:Suggests}
-Conflicts: laptop-mode-tools, power-profiles-daemon
+Conflicts: laptop-mode-tools, power-profiles-daemon, tuned
 Description: Optimize laptop battery life
  TLP is a feature-rich command-line utility, saving laptop battery power
  without the need to delve deeper into technical details.

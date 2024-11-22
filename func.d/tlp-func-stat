@@ -1,7 +1,7 @@
 #!/bin/sh
 # tlp-func-stat - tlp-stat Helper Functions
 #
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net> and others.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net> and others.
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # Needs: tlp-func-base, 15-tlp-func-disk, 35-tlp-func-batt
@@ -90,7 +90,7 @@ printparm_epb () {
 
     if val=$(read_sysf "$1"); then
         # sysfile exists and is actually readable, output content
-        printf "%-54s = %2d " "$1" "$val"
+        printf "%-54s =  %2d " "$1" "$val"
         # Convert distinct values to strings
         strval=$(echo "$val" | sed -r 's/^0/performance/;
                                      s/^4/balance_performance/;
@@ -197,9 +197,9 @@ print_saved_powerstate () {
     get_manual_mode
     # shellcheck disable=SC2154
     case "$_manual_mode" in
-        0|1) printf " (manual)\n" ;;
+        0|1|a) printf " (manual)\n" ;;
 
-        *) # check for persistent mode
+        n) # check for persistent mode
             # shellcheck disable=SC2154
             if get_persist_mode && [ "$_persist_mode" = "$sps" ]; then
                 printf " (persistent)\n"
@@ -352,6 +352,25 @@ print_nvme_temp () {
     return 0
 }
 
+anonymize_disk_id () {
+    # replace disk serial number with asterisks
+    # $1: disk id
+    if [ "$1" = "${1%_*}" ]; then
+        printf "%s" "$1"
+    else
+        echo "$1" | \
+            awk '{
+                s = $1
+                i = length(s)
+                while (substr(s, i, 1) != "_" && i > 0) {
+                    s = substr(s, 1, i-1) "*" substr(s, i+1)
+                    i--
+                }
+                print s
+            }'
+    fi
+}
+
 show_disk_data () {
     # formatted output of NVMe / SATA disk data
     # $1: disk device
@@ -370,7 +389,7 @@ show_disk_data () {
         nvme) # NVMe disk
             printf     "\n%s:\n" "/dev/$_disk_dev"
             printf     "  Type       = NVMe\n"
-            [ -n "$_disk_id" ] && printf "  Disk ID    = %s\n" "$_disk_id"
+            [ -n "$_disk_id" ] && printf "  Disk ID    = %s\n" "$(anonymize_disk_id "$_disk_id")"
             print_sysf "  Model      = %s\n" "/sys/block/$_disk_dev/device/model"
             print_sysf "  Firmware   = %s\n" "/sys/block/$_disk_dev/device/firmware_rev"
             print_nvme_temp "$_disk_dev"
@@ -380,7 +399,7 @@ show_disk_data () {
             # ATA/USB/IEEE1394 disk
             printf     "\n%s:\n" "/dev/$_disk_dev"
             printf     "  Type       = %s\n" "$(toupper "$_disk_type")"
-            [ -n "$_disk_id" ] && printf "  Disk ID    = %s\n" "$_disk_id"
+            [ -n "$_disk_id" ] && printf "  Disk ID    = %s\n" "$(anonymize_disk_id "$_disk_id")"
 
             # save spindle state
             get_disk_state "$_disk_dev"
@@ -593,7 +612,7 @@ printparm_i915 () {
 
 show_gpu_data () {
     # show GPU data for all drivers
-    local driver gpu sysout
+    local card driver gpu lc pps sysout
     local hdr=
 
     for gpu in "${BASE_DRMD}"/card?; do
@@ -605,7 +624,7 @@ show_gpu_data () {
             i915*) # Intel GPU
                 get_intel_gpu_sysdirs "$gpu" "$driver"
 
-                # power managment data
+                # power management data
                 if [ "$hdr" != "i915" ]; then
                     printf "+++ Intel Graphics\n"
                     hdr="i915"
@@ -645,8 +664,17 @@ show_gpu_data () {
                 fi
                 printf "%-65s = %s\n\n" "$gpu/device/driver" "$driver"
 
+                lc=0
                 if [ -f "$gpu/device/power_dpm_force_performance_level" ]; then
                     printparm "%-65s = ##%s##" "$gpu/device/power_dpm_force_performance_level"
+                    lc=1
+                fi
+                card="${gpu##/*/}"
+                for pps in "$gpu/${card}-eDP"*; do
+                    printparm "%-65s = ##%s##" "$pps/amdgpu/panel_power_savings" "not available"
+                    lc=1
+                done
+                if [ "$lc" -eq "1" ]; then
                     printf "\n"
                 fi
                 ;;
@@ -719,7 +747,7 @@ print_methods_per_driver () {
     done
 
     if [ -n "$mlist" ]; then
-        printf "(%s)\n" "$mlist"
+        printf "%s\n" "$mlist"
     else
         printf "(none)\n"
     fi
@@ -731,7 +759,7 @@ print_batstate () {
     # print battery charging state with
     # an explanation when a threshold inhibits charging
     # $1: sysfile
-    # global param: $_bm_thresh, $_syspwr
+    # global params: $_bm_thresh, $_syspwr
     local sysf val
 
     # check if bat state sysfile exists
@@ -775,11 +803,11 @@ check_udev_rule_ps () {
     # check if udev rule for power source changes draws
 
     if [  -n "$_psdev" ]; then
-        $UDEVADM test -a change "$_psdev" 2>&1 | grep -E '^Reading rules file: .*tlp.rules$'
-        if $UDEVADM test -a change "$_psdev" 2> /dev/null | grep -E '^run: .*tlp auto'; then
+        $UDEVADM -d test -a change "$_psdev" 2>&1 | grep -E '^Reading rules file: .*tlp.rules$'
+        if $UDEVADM test -a change "$_psdev" 2> /dev/null |  grep -E '(^run:|RUN{program} :) .*tlp auto'; then
             printf "OK.\n\n"
         else
-            printf "Fatal Error: TLP's udev rule for power source changes (85-tlp.rules) is not active -- possible package bug.\n\n"
+            cprintf "err" "Fatal Error: TLP's udev rule for power source changes (85-tlp.rules) is not active -- possible package bug.\n\n"
         fi
     fi
 }
@@ -788,13 +816,13 @@ check_udev_rule_usb () {
     # check if udev rule for connecting USB device draws
     local ud
 
-    ud="$(glob_dirs '/*' /sys/bus/usb/devices 2> /dev/null | grep -v ':' | head -1)"
+    ud="$(glob_dirs '/usb[1-9]' /sys/bus/usb/devices/ 2> /dev/null | head -1)"
     if [ -n "$ud" ]; then
-        $UDEVADM test -a add "$ud" 2>&1 | grep -E '^Reading rules file: .*tlp.rules$'
-        if $UDEVADM test -a add "$ud" 2> /dev/null | grep -E '^run: .*tlp-usb-udev usb'; then
+        $UDEVADM -d test -a add "$ud" 2>&1 | grep -E '^Reading rules file: .*tlp.rules$'
+        if $UDEVADM test -a add "$ud" 2> /dev/null |  grep -E '(^run:|RUN{program} :) .*tlp-usb-udev usb'; then
             printf "OK.\n\n"
         else
-            printf "Fatal Error: TLP's udev rule for connecting USB devices (85-tlp.rules) is not active -- possible package bug.\n\n"
+            cprintf "err" "Fatal Error: TLP's udev rule for connecting USB devices (85-tlp.rules) is not active -- possible package bug.\n\n"
         fi
     fi
 }

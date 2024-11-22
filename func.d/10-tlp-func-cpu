@@ -1,7 +1,7 @@
 #!/bin/sh
 # tlp-func-cpu - Processor Functions
 #
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net> and others.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net> and others.
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # Needs: tlp-func-base
@@ -17,10 +17,8 @@ readonly CPU_MIN_PERF_PCT=$INTEL_PSTATED/min_perf_pct
 readonly CPU_MAX_PERF_PCT=$INTEL_PSTATED/max_perf_pct
 readonly CPU_TURBO_PSTATE=$INTEL_PSTATED/no_turbo
 readonly INTEL_DYN_BOOST=$INTEL_PSTATED/hwp_dynamic_boost
-readonly AMD_DYN_BOOST=$AMD_PSTATED/cppc_dynamic_boost
 
 readonly CPU_INFO=/proc/cpuinfo
-readonly ENERGYPERF=x86_energy_perf_policy
 
 readonly FWACPID=/sys/firmware/acpi
 
@@ -197,7 +195,6 @@ set_cpu_perf_policy () {
     # Intel CPUs will not honor EPB
     # --- amd_pstate
     # CPPC firmware via the Energy Performance Preference register
-    # Note: needs a patchset not yet merged as of Linux 6.1, see [5]
     #
     # References:
     # [1] https://www.kernel.org/doc/html/latest/admin-guide/pm/intel_pstate.html#energy-vs-performance-hints
@@ -241,8 +238,8 @@ set_cpu_perf_policy () {
                 ;;
         esac
 
-        # don't apply intel_pstate HWP.EPP when power-profile-daemon is running
-        if check_intel_pstate && check_ppd_active ; then
+        # don't apply EPP when power-profiles-daemon is running
+        if check_ppd_active ; then
             echo_message "Warning: CPU_ENERGY_PERF_POLICY_ON_AC/BAT is not set because power-profiles-daemon is running."
             echo_debug "pm" "set_cpu_perf_policy($1).epp.nop_ppd_active"
             return 0
@@ -272,8 +269,8 @@ set_cpu_perf_policy () {
     fi
 
     if supports_intel_cpu_epb; then
-        # translate Intel HWP.EPP alphanumeric to EPB numeric values for native kernel support
-        # and x86_energy_perf_policy backwards compatibility; validate numeric values
+        # translate Intel HWP.EPP alphanumeric to EPB numeric values for native kernel support;
+        # validate numeric values
         case "$perf" in
             performance)         pnum=0 ;;
             balance_performance) pnum=4 ;;
@@ -289,41 +286,24 @@ set_cpu_perf_policy () {
                 ;;
         esac
 
-        # apply EPB setting
-        # try native kernel API first (5.2 and later)
+        # apply EPB setting using native kernel API (5.2 and later required)
         cnt=0
         ec=0
         for cpuf in "${CPUD}"/cpu*/power/energy_perf_bias; do
             if [ -f "$cpuf" ]; then
                 cnt=$((cnt + 1))
                 if  ! write_sysf "$pnum" "$cpuf"; then
-                    echo_debug "pm" "set_cpu_perf_policy($1).epb_kernel.write_error: $perf($pnum) $cpuf; rc=$?"
+                    echo_debug "pm" "set_cpu_perf_policy($1).epb.write_error: $perf($pnum) $cpuf; rc=$?"
                     ec=$((ec+1))
                 fi
             fi
         done
         if [ $cnt -gt 0 ]; then
             # native kernel API actually detected
-            echo_debug "pm" "set_cpu_perf_policy($1).epb_kernel: $perf($pnum); ec=$ec"
-            return 0
-        fi
-
-        # no native kernel support, try x86_energy_perf_policy
-        if ! cmd_exists $ENERGYPERF; then
-            # x86_energy_perf_policy not installed
-            echo_debug "pm" "set_cpu_perf_policy($1).epb_x: $perf($pnum); x86_energy_perf_policy not installed"
+            echo_debug "pm" "set_cpu_perf_policy($1).epb: $perf($pnum); ec=$ec"
         else
-            # x86_energy_perf_policy needs kernel module 'msr'
-            load_modules "$MOD_MSR"
-            $ENERGYPERF "$pnum" > /dev/null 2>&1
-            rc=$?
-            case $rc in
-                0) echo_debug "pm" "set_cpu_perf_policy($1).epb_x: $perf($pnum); rc=$?" ;;
-                1) echo_debug "pm" "set_cpu_perf_policy($1).epb_x: $perf($pnum); rc=$? (unsupported cpu)" ;;
-                2) echo_debug "pm" "set_cpu_perf_policy($1).epb_x: $perf($pnum); rc=$? (kernel specific x86_energy_perf_policy missing)" ;;
-                *) echo_debug "pm" "set_cpu_perf_policy($1).epb_x: $perf($pnum); rc=$? (unknown)" ;;
-            esac
-            return $rc
+            # no native kernel support
+            echo_debug "pm" "set_cpu_perf_policy($1).epb.not_available"
         fi
     else
         echo_debug "pm" "set_cpu_perf_policy($1).epb.unsupported_cpu"
@@ -425,9 +405,8 @@ set_cpu_boost_all () { # $1: 0=ac mode, 1=battery mode
 }
 
 set_cpu_dyn_boost () {
-    # set Intel/AMD CPU dynamic boost feature
+    # set CPU dynamic boost feature
     # - intel_state in HWP active mode
-    # - amd_pstate in active mode, same requirements as set_cpu_perf_policy()
     # $1: 0=ac mode, 1=battery mode
     local val
 
@@ -440,18 +419,11 @@ set_cpu_dyn_boost () {
     if [ -z "$val" ]; then
         echo_debug "pm" "set_cpu_dyn_boost($1).not_configured"
     elif check_intel_pstate; then
-        if [ $INTEL_DYN_BOOST ]; then
+        if [ -f "$INTEL_DYN_BOOST" ]; then
             write_sysf "$val" $INTEL_DYN_BOOST
             echo_debug "pm" "set_cpu_dyn_boost($1).intel_pstate: $val; rc=$?"
         else
             echo_debug "pm" "set_cpu_dyn_boost($1).intel_pstate.not_supported"
-        fi
-    elif check_amd_pstate; then
-        if [ $AMD_DYN_BOOST ]; then
-            write_sysf "$val" $AMD_DYN_BOOST
-            echo_debug "pm" "set_cpu_dyn_boost($1).amd_pstate: $val; rc=$?"
-        else
-            echo_debug "pm" "set_cpu_dyn_boost($1).amd_pstate.not_supported"
         fi
     else
         echo_debug "pm" "set_cpu_dyn_boost($1).no_driver"

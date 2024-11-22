@@ -1,7 +1,7 @@
 #!/bin/sh
 # tlp-func-usb - USB Functions
 #
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net> and others.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net> and others.
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # Needs: tlp-func-base
@@ -29,14 +29,13 @@ usb_suspend_device () {
 
     if [ -f "$usbdev/power/autosuspend_delay_ms" ]; then
         # device is autosuspendable
-        # shellcheck disable=SC2155
-        local vendor="$(read_sysf "$usbdev/idVendor")"
-        # shellcheck disable=SC2155
-        local usbid="$vendor:$(read_sysf "$usbdev/idProduct")"
-        # shellcheck disable=SC2155
-        local busdev="Bus $(read_sysf "$usbdev/busnum") Dev $(read_sysf "$usbdev/devnum")"
-        # shellcheck disable=SC2155
-        local dclass="$(read_sysf "$usbdev/bDeviceClass")"
+        local vendor usbid busdev dclass
+
+        vendor="$(read_sysf "$usbdev/idVendor")"
+        usbid="$vendor:$(read_sysf "$usbdev/idProduct")"
+        busdev="Bus $(read_sysf "$usbdev/busnum") Dev $(read_sysf "$usbdev/devnum")"
+        dclass="$(read_sysf "$usbdev/bDeviceClass")"
+
         local control="${3:-auto}"
         local caller="$2"
         local exc=""
@@ -268,10 +267,9 @@ set_usb_suspend () {
         # set "startup completion" flag for tlp-usb-udev
         set_run_flag $USB_DONE
     else
-        [ "$1" = "1" ] && echo "Error: USB autosuspend is disabled. Set USB_AUTOSUSPEND=1 in ${CONF_USR}." 1>&2
+        [ "$1" = "1" ] && cecho "Error: USB autosuspend is disabled. Set USB_AUTOSUSPEND=1 in ${CONF_USR}." 1>&2
         echo_debug "usb" "set_usb_suspend.not_configured"
     fi
 
     return 0
 }
-

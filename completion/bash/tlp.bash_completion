@@ -1,5 +1,5 @@
 # bash completion for TLP
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net> and others.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net> and others.
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 _batteries() {
@@ -24,7 +24,7 @@ _tlp() {
     local cur prev words cword opts bats
     _init_completion || return
 
-    opts="start ac bat usb bayoff discharge setcharge fullcharge chargeonce recalibrate diskid"
+    opts="start ac bat usb bayoff discharge setcharge fullcharge chargeonce recalibrate diskid --version"
 
     case $cword in
         1)
@@ -50,35 +50,34 @@ _tlp() {
             ;;
     esac
 } &&
-complete -F _tlp tlp
+    complete -F _tlp tlp
 
 _tlp_rf() {
     local cur prev words cword opts
     _init_completion || return
 
-    opts="on off toggle"
+    opts="on off toggle --version"
 
     if [ $cword -eq 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
     fi
 } &&
-complete -F _tlp_rf bluetooth
-complete -F _tlp_rf nfc
-complete -F _tlp_rf wwan
-complete -F _tlp_rf wifi
+    complete -F _tlp_rf bluetooth nfc wwan wifi
 
 _tlp_stat() {
     local cur prev words cword opts
     _init_completion || return
 
-    opts="--battery --cdiff --config --disk --graphics --pcie --pev --processor
-          --psup --rfkill --system --temp --trace --udev --usb --verbose
-          --warn"
+    opts="--battery --cdiff --config --disk --graphics --mode --pcie --pev
+          --processor --psup --quiet --rfkill --system --temp --trace --udev
+          --usb --verbose --warn"
 
     if [ $cword -eq 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
     fi
 } &&
-complete -F _tlp_stat tlp-stat
+    complete -F _tlp_stat tlp-stat
+
+complete -F _command run-on-ac run-on-bat
