@@ -1,10 +1,10 @@
-#!/usr/bin/clitest
+#!/usr/bin/env clitest
 # Test charge thresholds for Toshiba/Dynabook laptops
 # Requirements:
 # * Hardware: Toshiba/Dynabook laptop w/ toshiba_acpi driver
 # * Battery: BAT1
 # * Software: kernel 6.0+
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net>.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net>.
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
 $ # +++ Toshiba/Dynabook ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -35,16 +35,18 @@ Error: stop charge threshold (24) for BAT1 is not specified or invalid (must be 
 $ sudo tlp setcharge 42 100 BAT1
 Setting temporary charge threshold for BAT1:
   stop = 100 (no change)
-$ sudo tlp setcharge 42 80 BAT1
+$ sudo tlp setcharge 42 80 BAT1 -- X_SOC_CHECK=0
 Setting temporary charge threshold for BAT1:
   stop =  80
-$ sudo tlp setcharge DEF DEF BAT1
-Setting temporary charge threshold for BAT1:
-  stop = 100
 $ sudo tlp setcharge 42 80
 Error: battery BAT0 not present.
 $ sudo tlp setcharge 2
 Error: battery 2 not present.
+$ #
+$ # --- Reset to hardware defaults
+$ sudo tlp setcharge DEF DEF BAT1
+Setting temporary charge thresholds for BAT1:
+  stop  = 100
 $ #
 $ # --- tlp-stat
 $ sudo tlp-stat -b | sudo tlp-stat -b | grep -E 'charge_control

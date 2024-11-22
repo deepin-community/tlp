@@ -1,12 +1,12 @@
 # bash completion for TLP-RDW
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net> and others.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net> and others.
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 _tlp_rdw() {
     local cur prev words cword opts
     _init_completion || return
 
-    opts="enable disable"
+    opts="enable disable --version"
 
     if [ $cword -eq 1 ]; then
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )

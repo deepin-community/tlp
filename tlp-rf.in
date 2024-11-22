@@ -1,7 +1,7 @@
 #!/bin/sh
 # tlp - switch bluetooth/nfc/wifi/wwan on/off
 #
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net> and others.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net> and others.
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # --- Source libraries
@@ -12,12 +12,17 @@ for lib in @TLP_TLIB@/tlp-func-base @TLP_FLIB@/25-tlp-func-rf @TLP_FLIB@/30-tlp-
 done
 
 # --- MAIN
+carg1="$1"
+if [ "$carg1" = "--version" ]; then
+    print_version
+    exit 0
+fi
 
 # read configuration: quit on error, trace allowed
 read_config 1 0
-
-carg1=$1
 parse_args4config "$@"
+cprintf_init
+
 add_sbin2path
 self=${0##*/}
 
@@ -48,7 +53,7 @@ case $self in
         ;;
 
     *)
-        echo "Error: unknown device type \"$self\"." 1>&2
+        cecho "Error: unknown device type \"$self\"." 1>&2
         do_exit 1
         ;;
 esac

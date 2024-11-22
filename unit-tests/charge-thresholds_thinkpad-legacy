@@ -1,8 +1,8 @@
-#!/usr/bin/clitest
+#!/usr/bin/env clitest
 # Test charge thresholds for Legacy ThinkPads
 # Requirements:
 # * Hardware: Legacy ThinkPad (<= X201/T410)
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net>.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net>.
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
 $ # +++ Legacy ThinkPad +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -30,7 +30,7 @@ $ sudo tlp start -- START_CHARGE_THRESH_BAT0="DEF" STOP_CHARGE_THRESH_BAT0="DEF"
 TLP started in AC mode (auto).
 $ #
 $ # --- tlp setcharge w/o arguments
-$ sudo tlp setcharge -- START_CHARGE_THRESH_BAT0="60" STOP_CHARGE_THRESH_BAT0="100"
+$ sudo tlp setcharge -- START_CHARGE_THRESH_BAT0="60" STOP_CHARGE_THRESH_BAT0="100" X_SOC_CHECK=0
 Setting temporary charge thresholds for BAT0:
   start =  60
   stop  = 100 (no change)
@@ -58,7 +58,7 @@ $ sudo tlp setcharge -- TPSMAPI_ENABLE=0 START_CHARGE_THRESH_BAT0="DEF" STOP_CHA
 Error: battery charge thresholds not available.
 $ #
 $ # --- tlp setcharge w/ arguments
-$ sudo tlp setcharge 60 100
+$ sudo tlp setcharge 60 100 -- X_SOC_CHECK=0
 Setting temporary charge thresholds for BAT0:
   start =  60
   stop  = 100 (no change)
@@ -99,15 +99,9 @@ Error: battery BAT1 not present.
 $ sudo tlp setcharge XYZZY ABCDE BAT1
 Error: battery BAT1 not present.
 $ #
-$ # --- Reset
-$ sudo tlp setcharge -- START_CHARGE_THRESH_BAT0="60" STOP_CHARGE_THRESH_BAT0="100"
-Setting temporary charge thresholds for BAT0:
-  start =  60
-  stop  = 100 (no change)
-$ #
 $ # --- tlp-stat
 $ sudo tlp-stat -b | grep -E 'charge_thresh|discharge'
-/sys/devices/platform/smapi/BAT0/start_charge_thresh        =     60 [%]
+/sys/devices/platform/smapi/BAT0/start_charge_thresh        =     96 [%]
 /sys/devices/platform/smapi/BAT0/stop_charge_thresh         =    100 [%]
 /sys/devices/platform/smapi/BAT0/force_discharge            =      0
 $ sudo tlp-stat -b -- X_THRESH_SIMULATE_READERR=1 | grep -E 'charge_thresh|discharge'
@@ -146,7 +140,11 @@ Plugin: thinkpad-legacy
 Supported features: none available
 Driver usage:
 * tp-smapi (tp_smapi) = inactive (kernel module 'tp_smapi' not installed)
-$ sudo tlp-stat -b | grep -A2 '+++ Recommendations'
+$ sudo tlp-stat -b | grep -A1 '+++ Recommendations'
 +++ Recommendations
 * Install tp-smapi kernel modules for ThinkPad battery thresholds and recalibration
 $ sudo ./kmod-helper tp_smapi restore
+$ #
+$ # --- Reset test machine to configured thresholds
+$ sudo tlp setcharge BAT0  > /dev/null 2>&1
+$ #

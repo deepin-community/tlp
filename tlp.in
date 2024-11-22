@@ -1,7 +1,7 @@
 #!/bin/sh
 # tlp - adjust power settings
 #
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net> and others.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net> and others.
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # --- Source libraries
@@ -39,6 +39,7 @@ apply_common_settings () { # apply settings common to all modes
     set_pcie_aspm "$1"
     set_intel_gpu_min_max_boost_freq "$1"
     set_amdgpu_profile "$1"
+    set_abm_level "$1"
     set_wifi_power_mode "$1"
     disable_wake_on_lan
     set_sound_power_mode "$1"
@@ -115,7 +116,7 @@ parse_args () { # parse command-line arguments
 
                 stat)
                     # unsupported command
-                    echo "Error: 'tlp stat' no longer supported, use 'tlp-stat' instead."  1>&2
+                    cecho "Error: 'tlp stat' no longer supported, use 'tlp-stat' instead."  1>&2
                     do_exit 3
                     ;;
 
@@ -125,9 +126,15 @@ parse_args () { # parse command-line arguments
                     _cmd2=""
                     ;;
 
+                --version)
+                    # no operation
+                    _cmd="version"
+                    _cmd2=""
+                    ;;
+
                 *)
                     # unknown command
-                    echo "Error: unknown command \"$1\"."  1>&2
+                    cecho "Error: unknown command \"$1\"."  1>&2
                     show_usage
                     do_exit 3
                     ;;
@@ -178,11 +185,17 @@ parse_args () { # parse command-line arguments
 }
 
 # --- MAIN
+parse_args "$@"
+
+if [ "$_cmd" = "version" ]; then
+    print_version
+    exit 0
+fi
+
 # read configuration: quit on error, trace allowed
 read_config 1 0
-
-parse_args "$@"
 parse_args4config "$@"
+cprintf_init
 
 check_tlp_enabled 1 || do_exit 1
 add_sbin2path
@@ -219,7 +232,9 @@ case "$_cmd" in
     auto|resume)
         # if manual mode is set, use instead of current power state
         # shellcheck disable=SC2154
-        [ "$_manual_mode" != "none" ] && pwrmode="$_manual_mode"
+        case $_manual_mode in
+            0|1) pwrmode="$_manual_mode" ;;
+        esac
         ;;
 
     true|bat)
@@ -240,11 +255,7 @@ case "$_syspwr" in
     *) echo_debug "run" "power_source=unknown ($_syspwr)" ;;
 esac
 
-case "$_manual_mode" in
-    0) echo_debug "run" "manual_mode=ac" ;;
-    1) echo_debug "run" "manual_mode=bat" ;;
-    *) echo_debug "run" "manual_mode=none" ;;
-esac
+echo_debug "run" "manual_mode=$_manual_mode"
 
 case "$pwrmode" in
     0) echo_debug "run" "power_mode=ac" ;;
@@ -281,7 +292,7 @@ case "$_cmd" in
 
                 # apply battery settings
                 echo -n "Setting battery charge thresholds..."
-                set_charge_thresholds
+                init_batteries_thresholds
                 echo "done."
 
                 # apply radio states
@@ -299,7 +310,7 @@ case "$_cmd" in
 
                 # apply battery settings
                 echo -n "Setting battery charge thresholds..."
-                set_charge_thresholds
+                init_batteries_thresholds
                 echo "done."
                 ;;
 
@@ -315,13 +326,6 @@ case "$_cmd" in
                     echo -n "Applying power save settings..."
                     apply_common_settings 0
                     poweroff_drivebay "$pwrmode" 0
-                    echo "done."
-                fi
-
-                # disable usb autosuspend if configured
-                if [ "$USB_AUTOSUSPEND_DISABLE_ON_SHUTDOWN" = "1" ]; then
-                    echo -n "Disabling usb autosuspend..."
-                    set_usb_suspend 0 on
                     echo "done."
                 fi
 
@@ -354,7 +358,7 @@ case "$_cmd" in
                 set_radio_device_states "$pwrmode"
                 if [ "$RESTORE_THRESHOLDS_ON_BAT" = "1" ] \
                     && [ "$pwrmode" = "1" ]; then
-                    set_charge_thresholds
+                    init_batteries_thresholds
                 fi
                 save_runconf
             fi
@@ -370,7 +374,7 @@ case "$_cmd" in
             apply_common_settings "$pwrmode"
             poweroff_drivebay "$pwrmode" 0
             set_usb_suspend 0 auto
-            set_charge_thresholds
+            init_batteries_thresholds
             set_radio_device_states "$pwrmode"
             save_runconf
             unlock_tlp
@@ -452,7 +456,7 @@ case "$_cmd" in
             compare_and_save_power_state "$pwrmode"
             apply_common_settings "$pwrmode"
             resume_drivebay "$pwrmode"
-            set_charge_thresholds "asus huawei lg lg-legacy"
+            init_batteries_thresholds "asus huawei lg lg-legacy"
             save_runconf
             unlock_tlp
         fi
@@ -484,7 +488,7 @@ case "$_cmd" in
             setcharge_battery DEF DEF $_carg1
             exitcode=$?
             if [ $exitcode -eq 0 ]; then
-                echo "Charging starts now, keep AC connected."
+                echo "Charging starts now, keep AC connected." 1>&2
             fi
         else
             exitcode=2
@@ -499,7 +503,7 @@ case "$_cmd" in
             chargeonce_battery $_carg1
             exitcode=$?
             if [ $exitcode -eq 0 ]; then
-                echo "Charging starts now, keep AC connected."
+                echo "Charging starts now, keep AC connected." 1>&2
             fi
         else
             exitcode=2
@@ -533,10 +537,10 @@ case "$_cmd" in
                     discharge_battery $_carg1
                     exitcode=$?
                     if [ $exitcode -eq 0 ]; then
-                        echo "Charging starts now, for a complete recalibration"
-                        echo "keep AC connected until the battery is fully charged."
+                        echo "Charging starts now, for a complete recalibration" 1>&2
+                        echo "keep AC connected until the battery is fully charged." 1>&2
                     else
-                        echo "Battery recalibration aborted."
+                        echo "Battery recalibration aborted." 1>&2
                     fi
                 fi
             else
@@ -556,7 +560,17 @@ case "$_cmd" in
         select_batdrv
         batdrv_select_battery "DEF"
         save_runconf
-        echo "Debug: no operation performed."
+        echo_message "Debug: no operation performed."
+        echo_message "Error: message color test."
+        echo_message "Warning: message color test."
+        echo_message "Notice: message color test."
+        echo_message "Success: message color test." "success"
+        _bgtask=1
+        echo_message "Debug: no operation performed."
+        echo_message "Error: message color test."
+        echo_message "Warning: message color test."
+        echo_message "Notice: message color test."
+        echo_message "Success: message color test." "success"
         ;;
 esac
 

@@ -1,7 +1,7 @@
 #!/bin/sh
 # tlp-func-bay - Bay Functions
 #
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net> and others.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net> and others.
 # This software is licensed under the GPL v2 or later.
 
 # SPDX-License-Identifier: GPL-2.0-or-later
@@ -9,7 +9,7 @@
 # ----------------------------------------------------------------------------
 # Constants
 
-readonly DOCKGLOB="/sys/devices/platform/dock.?"
+readonly DOCK_GLOB="/sys/devices/platform/dock.?"
 
 readonly BAYSTATEFILE=$RUNDIR/bay_saved
 
@@ -20,7 +20,9 @@ readonly BAYSTATEFILE=$RUNDIR/bay_saved
 
 get_drivebay_device () { # Find generic dock interface for drive bay
                          # rc: 0; retval: $dock
-    dock=$(grep -l 'ata_bay' "$DOCKGLOB/type" 2> /dev/null)
+
+    # shellcheck disable=SC2086
+    dock=$(grep -l 'ata_bay' $DOCK_GLOB/type 2> /dev/null)
     dock=${dock%%/type}
     if [ ! -d "$dock" ]; then
         dock=""
@@ -81,7 +83,7 @@ poweroff_drivebay () { # power off optical drive in drive bay
     get_drivebay_device
     if [ -z "$dock" ] || [ ! -d "$dock" ]; then
         echo_debug "pm" "poweroff_drivebay($1).no_bay_device"
-        [ "$2" = "1" ] && echo "Error: cannot locate bay device." 1>&2
+        [ "$2" = "1" ] && cecho "Error: cannot locate bay device." 1>&2
         return 1
     fi
     echo_debug "pm" "poweroff_drivebay($1): dock=$dock"
@@ -95,7 +97,7 @@ poweroff_drivebay () { # power off optical drive in drive bay
         optdrv="$BAY_DEVICE"
         if [ -z "$optdrv" ]; then
             echo_debug "pm" "poweroff_drivebay($1).opt_drive_not_configured"
-            [ "$2" = "1" ] && echo "Error: no optical drive configured (BAY_DEVICE=\"\")." 1>&2
+            [ "$2" = "1" ] && cecho "Error: no optical drive configured (BAY_DEVICE=\"\")." 1>&2
             return 1
         elif [ ! -b "/dev/$optdrv" ]; then
             echo_debug "pm" "poweroff_drivebay($1).no_opt_drive: /dev/$optdrv"

@@ -2,7 +2,7 @@
 # 90-generic - Battery plugin catchall for laptops that either not provide
 # a kernel interface for battery care or TLP doesn't support it yet.
 #
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net> and others.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net> and others.
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # Needs: tlp-func-base, 35-tlp-func-batt, tlp-func-stat
@@ -58,6 +58,11 @@ batdrv_select_battery () {
     # determine battery acpidir
     # $1: battery
     # retval: $_bd_read:   directory with battery data sysfiles
+
+    local bat="$1"
+
+    # convert battery param to uppercase
+    bat="$(printf '%s' "$1" | tr "[:lower:]" "[:upper:]")"
 
    _bd_read="$ACPIBATDIR/$bat"
     return 0
@@ -129,7 +134,8 @@ batdrv_show_battery_data () { # output battery data
 
     printf "+++ Battery Care\n"
     printf "Plugin: %s\n" "$_batdrv_plugin"
-    printf "Supported features: none available\n\n"
+    cprintf "warning" "Supported features: none available\n"
+    printf "\n"
 
     local bat lf
     local bcnt=0
@@ -139,7 +145,8 @@ batdrv_show_battery_data () { # output battery data
 
     if [ -z "$_batteries" ]; then
         printf "+++ Battery Status\n"
-        printf "No batteries detected.\n\n"
+        cprintf "warning" "No batteries detected.\n"
+        printf "\n"
         return 1
     fi
 
@@ -222,7 +229,14 @@ batdrv_show_battery_data () { # output battery data
     return 0
 }
 
+batdrv_check_soc_gt_stop () {
+    # function not implemented for generic hardware
+
+    return 1
+}
+
 batdrv_recommendations () {
     # no recommendations for generic hardware
+
     return 0
 }

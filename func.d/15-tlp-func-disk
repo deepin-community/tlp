@@ -1,7 +1,7 @@
 #!/bin/sh
 # tlp-func-disk - Storage Device and Filesystem Functions
 #
-# Copyright (c) 2023 Thomas Koch <linrunner at gmx.net> and others.
+# Copyright (c) 2024 Thomas Koch <linrunner at gmx.net> and others.
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # Needs: tlp-func-base
@@ -9,8 +9,8 @@
 # ----------------------------------------------------------------------------
 # Constants
 
-readonly AHCID=$PCID'/*/ata*'
-readonly ALPMD=$AHCID'/host*/scsi_host/host*'
+readonly AHCI_GLOB=$PCID'/*/ata*'
+readonly ALPM_GLOB=$AHCI_GLOB'/host*/scsi_host/host*'
 
 readonly DISK_NOP_WORDS="_ keep"
 
@@ -204,11 +204,13 @@ get_disk_dev () { # translate disk id to device (sdX)
 
 show_disk_ids () { # show disk id's
     local dev
+    local shown=""
 
     { # iterate SATA and NVMe disks
         for dev in $(glob_files '/*' /dev/disk/by-id/ | sed -rn 's/.*\/((ata|ieee1394|nvme|usb))/\1/p' | grep -E -v '(^nvme-eui|-part[1-9]+)'); do
-            if [ -n "$dev" ]; then
-                get_disk_dev "$dev" && printf '%s: %s\n' "$_disk_dev" "$_disk_id"
+            if [ -n "$dev" ] && get_disk_dev "$dev" && ! wordinlist "$_disk_dev" "$shown" ; then
+                printf '%s: %s\n' "$_disk_dev" "$_disk_id"
+                shown="$shown $_disk_dev"
             fi
         done
     } | sort
@@ -447,7 +449,7 @@ set_sata_link_power () { # set ahci link power management
     # shellcheck disable=SC2086
     set -- $pwrlist
     # iterate SATA hosts
-    for host in $ALPMD ; do
+    for host in $ALPM_GLOB ; do
         linkpol="$host/link_power_management_policy"
         if [ -f "$linkpol" ]; then
             hostid=${host##*/}
@@ -587,7 +589,7 @@ set_ahci_port_runtime_pm () { # set runtime power management for ahci ports
     fi
 
     # iterate ahci ports
-    for device in $AHCID; do
+    for device in $AHCI_GLOB; do
         if write_sysf "$control" "${device}/power/control"; then
             echo_debug "disk" "set_ahci_port_runtime_pm($1).$control: port=$device; rc=0"
         else
