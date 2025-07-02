@@ -1,8 +1,0 @@
-*.geany
-.idea
-*.log
-PKGBUILD
-pkg
-src
-worktree*
-*.zst
