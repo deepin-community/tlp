@@ -1,0 +1,62 @@
+Index: tlp/func.d/05-tlp-func-pm
+===================================================================
+--- tlp.orig/func.d/05-tlp-func-pm
++++ tlp/func.d/05-tlp-func-pm
+@@ -240,6 +240,25 @@ disable_wake_on_lan () {  # disable WOL
+     return 0
+ }
+ 
++enable_wake_on_lan () {  # enable WOL per $WOL_ENABLE (ethtool wol mode chars, Y = magic packet)
++    local mode="$WOL_ENABLE"
++
++    if [ "$WOL_DISABLE" = "Y" ]; then
++        [ -n "$WOL_ENABLE" ] && echo_debug "pm" "conflict, WOL_DISABLE=Y wins, WOL_ENABLE=$WOL_ENABLE ignored"
++        return 0
++    fi
++    [ -z "$WOL_ENABLE" ] && return 0
++
++    [ "$mode" = "Y" ] && mode=g
++    get_ethifaces
++    for ei in $_ethifaces; do
++        $ETHTOOL -s "$ei" wol "$mode" > /dev/null 2>&1
++        echo_debug "pm" "enable_wake_on_lan: $ei mode=$mode; rc=$?"
++    done
++
++    return 0
++}
++
+ # --- Set suspend method
+ 
+ set_mem_sleep () {
+Index: tlp/tlp.conf.in
+===================================================================
+--- tlp.orig/tlp.conf.in
++++ tlp/tlp.conf.in
+@@ -368,6 +368,15 @@
+ 
+ #WOL_DISABLE=Y
+ 
++# Enable Wake-on-LAN, ethtool wol mode characters (e.g. g = magic packet,
++# gb = magic + broadcast, mg = multicast + magic). Y is an alias for g.
++# Enabled only if configured; takes effect only when WOL_DISABLE=N.
++# If both WOL_DISABLE=Y and WOL_ENABLE are set, WOL_DISABLE wins and an
++# error message is printed.
++# Default: not set
++
++#WOL_ENABLE=
++
+ # Enable audio power saving for Intel HDA, AC97 devices (timeout in secs).
+ # A value of 0 disables, >= 1 enables power saving.
+ # Note: 1 is recommended for Linux desktop environments with PulseAudio,
+Index: tlp/tlp.in
+===================================================================
+--- tlp.orig/tlp.in
++++ tlp/tlp.in
+@@ -44,6 +44,7 @@ apply_common_settings () { # apply setti
+     set_devfreq_governor "$1"
+     set_wifi_power_mode "$1"
+     disable_wake_on_lan
++    enable_wake_on_lan
+     set_sound_power_mode "$1"
+      set_dirty_ratio "$1"
+ 
