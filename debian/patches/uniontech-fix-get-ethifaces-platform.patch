@@ -1,0 +1,40 @@
+Index: tlp/func.d/05-tlp-func-pm
+===================================================================
+--- tlp.orig/func.d/05-tlp-func-pm
++++ tlp/func.d/05-tlp-func-pm
+@@ -208,19 +208,26 @@ set_sound_power_mode () { # set sound ch
+ # --- LAN Devices
+ 
+ get_ethifaces () { # get all eth devices -- retval: $_ethifaces
+-    local ei eic
++    local ei eid subsys
+     _ethifaces=""
+ 
+-    for eic in "$NETD"/*/device/class; do
+-        if [ "$(read_sysf "$eic")" = "0x020000" ] \
+-            && [ ! -d "${eic%/class}/ieee80211" ]; then
+-
+-            ei=${eic%/device/class}; ei=${ei##*/}
+-            _ethifaces="$_ethifaces $ei"
+-        fi
++    for eid in "$NETD"/*/device; do
++        # only ethernet devices (ARPHRD_ETHER = 1) on real hardware buses
++        [ "$(read_sysf "${eid%/device}/type")" = "1" ] || continue
++        subsys=$(readlink -f "$eid/subsystem" 2>/dev/null)
++        case "${subsys##*/}" in
++            pci|platform|usb) ;;
++            *) continue ;;
++        esac
++
++        # skip wireless interfaces
++        [ -d "$eid/ieee80211" ] && continue
++        [ -d "${eid%/device}/wireless" ] && continue
++
++        ei="${eid%/device}"; ei="${ei##*/}"
++        _ethifaces="${_ethifaces}${_ethifaces:+ }${ei}"
+     done
+ 
+-    _ethifaces="${_ethifaces# }"
+     return 0
+ }
+ 
