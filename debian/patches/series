@@ -4,3 +4,4 @@ uniontech-deepin-specific-func-customizations.patch
 uniontch-set-default-cpufreq-when-not-configured.patch
 uniontech-wol-enable.patch
 uniontech-fix-get-ethifaces-platform.patch
+uniontech-runtime-pm-platform.patch

@@ -1,3 +1,11 @@
+tlp (1.7.0.1-deepin6) stable; urgency=medium
+
+  * RUNTIME_PM_ENABLE/DISABLE: support platform devices (e.g. AMDI0010:00)
+    matched by device name; unlisted platform devices are never touched
+    (fixes i2c-hid touchpad unresponsive after suspend on some AMD laptops)
+
+ -- xinpeng.wang <wangxinpeng@uniontech.com>  Tue, 03 Nov 2026 11:50:56 +0800
+
 tlp (1.7.0.1-deepin5) unstable; urgency=medium
 
   * feat: add WOL_ENABLE to enable Wake-on-LAN (ethtool wol mode)
